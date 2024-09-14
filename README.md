@@ -90,7 +90,7 @@ The **pyx12** parser generates pandas dataframes from your 835 file so that you 
 The parser ensures that all segments (ISA, GS, ST, CLP, SVC) are organized in a structured, hierarchical format for easy access and analysis. It also captures important references and adjustments at various levels using `REF` and `CAS` segments, further enhancing the breakdown of claims and services.
 
 # Quick Export
-You can use the tables in `parser.pandas` to export into your data warehouse, though their long-format structure isn't well-suited for analytics. We've included a way of quickly exporting your data:
+You can use the tables in `parser.pandas` to impordt into your data warehouse for long-term storage, though their long-format structure isn't well-suited for analytics. We've included a way of quickly exporting your data:
 
 ```
 from py835 import Parser
