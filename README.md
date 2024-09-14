@@ -564,17 +564,6 @@ parser.pandas.SERVICES_CAS
       <td>None</td>
     </tr>
     <tr>
-      <th>4</th>
-      <td>otjWzh-ZjqtV4-3Pztpt-bYJ2ce</td>
-      <td>dc1CcU-A9Crpm-RCOmi9-5tqs5K</td>
-      <td>qCz1ZE-NpShQQ-9mhd6n-Ij521x</td>
-      <td>JAGubJ-pegsvc-ac3d2U-JVm6D7</td>
-      <td>nl7fRY-7FVkUV-2mJawy-t2i3gI</td>
-      <td>CAS05-CO</td>
-      <td>Adjustment Reason Code</td>
-      <td>None</td>
-    </tr>
-    <tr>
       <th>...</th>
       <td>...</td>
       <td>...</td>
@@ -584,61 +573,6 @@ parser.pandas.SERVICES_CAS
       <td>...</td>
       <td>...</td>
       <td>...</td>
-    </tr>
-    <tr>
-      <th>470</th>
-      <td>otjWzh-ZjqtV4-3Pztpt-bYJ2ce</td>
-      <td>dc1CcU-A9Crpm-RCOmi9-5tqs5K</td>
-      <td>qCz1ZE-NpShQQ-9mhd6n-Ij521x</td>
-      <td>fPfsSV-rsxaRs-AsCg4p-gLJRDn</td>
-      <td>BKKvyX-vdIxUP-icHxRg-O9y92d</td>
-      <td>CAS15-CO</td>
-      <td>Adjustment Amount</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>471</th>
-      <td>otjWzh-ZjqtV4-3Pztpt-bYJ2ce</td>
-      <td>dc1CcU-A9Crpm-RCOmi9-5tqs5K</td>
-      <td>qCz1ZE-NpShQQ-9mhd6n-Ij521x</td>
-      <td>fPfsSV-rsxaRs-AsCg4p-gLJRDn</td>
-      <td>BKKvyX-vdIxUP-icHxRg-O9y92d</td>
-      <td>CAS16-CO</td>
-      <td>Adjustment Quantity</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>472</th>
-      <td>otjWzh-ZjqtV4-3Pztpt-bYJ2ce</td>
-      <td>dc1CcU-A9Crpm-RCOmi9-5tqs5K</td>
-      <td>qCz1ZE-NpShQQ-9mhd6n-Ij521x</td>
-      <td>fPfsSV-rsxaRs-AsCg4p-gLJRDn</td>
-      <td>BKKvyX-vdIxUP-icHxRg-O9y92d</td>
-      <td>CAS17-CO</td>
-      <td>Adjustment Reason Code</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>473</th>
-      <td>otjWzh-ZjqtV4-3Pztpt-bYJ2ce</td>
-      <td>dc1CcU-A9Crpm-RCOmi9-5tqs5K</td>
-      <td>qCz1ZE-NpShQQ-9mhd6n-Ij521x</td>
-      <td>fPfsSV-rsxaRs-AsCg4p-gLJRDn</td>
-      <td>BKKvyX-vdIxUP-icHxRg-O9y92d</td>
-      <td>CAS18-CO</td>
-      <td>Adjustment Amount</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>474</th>
-      <td>otjWzh-ZjqtV4-3Pztpt-bYJ2ce</td>
-      <td>dc1CcU-A9Crpm-RCOmi9-5tqs5K</td>
-      <td>qCz1ZE-NpShQQ-9mhd6n-Ij521x</td>
-      <td>fPfsSV-rsxaRs-AsCg4p-gLJRDn</td>
-      <td>BKKvyX-vdIxUP-icHxRg-O9y92d</td>
-      <td>CAS19-CO</td>
-      <td>Adjustment Quantity</td>
-      <td>None</td>
     </tr>
   </tbody>
 </table>
