@@ -8,8 +8,6 @@ The **py835** Python package provides a robust toolset for parsing EDI 835 files
 
 Note that this project is still very much in the early stages. If you require a stable version, please fork this Github repository.
 
-
-
 ## Features
 
 - **Parse EDI 835 Files:** Load and process `.835` EDI files for healthcare claims and payment information.
@@ -17,7 +15,7 @@ Note that this project is still very much in the early stages. If you require a 
 - **DataFrame Output:** Organizes parsed data into Pandas DataFrames for more convenient analysis.
 - **Column Renaming:** Automatically renames columns based on EDI segment codes and descriptions for better readability.
 - **Pivot Tables:** Supports pivoting data (e.g., CAS and REF segments) for deeper analysis.
-- **JSON Export:** Supports exporting parsed data to JSON format for further use in other systems.
+- **JSON Export:** Supports exporting parsed data to JSON format (via pandas) for further use in other systems.
 
 ## Installation
 
@@ -40,9 +38,6 @@ pip install git+https://github.com/DHR-Health/py835.git
 # Usage
 Parse an 835 file using `py835` to access the data as Pandas dataframes. The parser systematically breaks down the 835 data into hierarchical layers, reflecting the structure of the EDI 835 file:
 
-
-
-
 ```python
 import py835
 
@@ -51,23 +46,7 @@ parser = py835.Parser(r'misc\example.835')
 parser.pandas.STATEMENTS.head(5)
 ```
 
-
-
-
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -143,19 +122,6 @@ parser.pandas.STATEMENTS.head(5).flatten()
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -199,19 +165,6 @@ parser.pandas.STATEMENTS.head(5).flatten(prefix='STATEMENTS ',translate_columns 
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -291,19 +244,6 @@ parser.pandas.HEADER.head(5)
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -371,19 +311,6 @@ parser.pandas.FUNCTIONAL_GROUPS.head(5)
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -473,19 +400,6 @@ parser.pandas.CLAIMS.head(5)
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -583,19 +497,6 @@ parser.pandas.SERVICES_CAS
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -764,19 +665,6 @@ financial_report_df.head(3)
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
