@@ -6,6 +6,20 @@
 
 The **py835** Python package provides a robust toolset for parsing EDI 835 files using the `pyx12` library. It processes healthcare claim information from EDI 835 files into structured formats like Pandas DataFrames and JSON for seamless data manipulation, reporting, and analysis.
 
+#### **Table of Contents**
+- [Features](#features)
+- [Installation](#installation)
+- [Structure of an 835 file](#structure-of-an-835-file)
+- [Usage](#usage)
+  - [Flattening DataFrames (long-to-wide)](#flattening-dataframes)
+  - [Accessing 835 Components](#accessing-835-components)
+- [Data Tree](#data-tree)
+- [Pandas DataFrames](#pandas-dataframes)
+- [Quick Export](#quick-export)
+- [Contributing](#contributing)
+- [License](#license)
+
+
 Note that this project is still very much in the early stages. If you require a stable version, please fork this Github repository.
 
 ## Features
@@ -32,7 +46,7 @@ pip install git+https://github.com/DHR-Health/py835.git
 - `io`: Standard Python module for handling input/output operations.
 - `json`: Used for exporting data to JSON format.
 
-<figcaption>Structure of an 835 file</figcaption>
+<figcaption><h3>Structure of an 835 file</h3></figcaption>
 <img src="misc\835 Structure.png">
 
 # Usage
