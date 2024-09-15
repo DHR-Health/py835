@@ -374,7 +374,7 @@ parser.TABLES['HEADER'].head(5)
 
 1. **Functional Groups (GS):**  `parser.TABLES['FUNCTIONAL_GROUPS']`
    
-   Within each `ISA` segment, there are one or more `GS` (Functional Group Header) segments. Functional groups organize related transaction sets under a specific purpose or business function, such as claims, remittance advice, or payment acknowledgments. You can retrieve information about the functional groups as a Pandas DataFrame using `parser.TABLES['FUNCTIONAL_GROUPS']`. This table can be joined with the ISA table on the `'header_id'` column for comprehensive data analysis across files.
+   Within each `ISA` segment, there are one or more `GS` (Functional Group Header) segments, also refered to as *Transaction Sets*. Functional groups organize related transaction sets under a specific purpose or business function, such as claims, remittance advice, or payment acknowledgments. You can retrieve information about the functional groups as a Pandas DataFrame using `parser.TABLES['FUNCTIONAL_GROUPS']`. This table can be joined with the ISA table on the `'header_id'` column for comprehensive data analysis across files.
 
 
 
