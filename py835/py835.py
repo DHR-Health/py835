@@ -474,13 +474,13 @@ class Parser:
                 result['FOOTER'].append(self.unpack(segment))
             else:
                 if current_state['SVC'] is not None:
-                    current_state['SVC'].update(self.unpack(segment))
+                    current_state['SVC']['segments'].append(self.unpack(segment))
                 elif current_state['CLP'] is not None:
-                    current_state['CLP'].update(self.unpack(segment))
+                    current_state['CLP']['segments'].append(self.unpack(segment))
                 elif current_state['ST'] is not None:
-                    current_state['ST'].update(self.unpack(segment))
+                    current_state['ST']['segments'].append(self.unpack(segment))
                 elif current_state['GS'] is not None:
-                    current_state['GS'].update(self.unpack(segment))
+                    current_state['GS']['segments'].append(self.unpack(segment))
                 else:
                     result['HEADER'].append(self.unpack(segment))
 
