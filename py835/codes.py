@@ -199,18 +199,18 @@ def update_provider_adjustment_reason_codes():
 # Update all codes
 ##########################################################################################
 
-def update_codes():
-    # delete the codes table from the sqlite3 database if it exists
-    db = connect()
-    db.execute("DROP TABLE IF EXISTS codes")
-    db.close()
+# def update_codes():
+#     # delete the codes table from the sqlite3 database if it exists
+#     db = connect()
+#     db.execute("DROP TABLE IF EXISTS codes")
+#     db.close()
 
-    update_dtm01_codes()
-    update_ref01_codes()
-    update_cas01_codes()
-    update_claim_adjustment_reason_codes()
-    update_claim_status_category_codes()
-    update_claim_status_codes()
-    update_provider_adjustment_reason_codes()
+#     update_dtm01_codes()
+#     update_ref01_codes()
+#     update_cas01_codes()
+#     update_claim_adjustment_reason_codes()
+#     update_claim_status_category_codes()
+#     update_claim_status_codes()
+#     update_provider_adjustment_reason_codes()
 
-update_codes()
+# update_codes()
