@@ -1,5 +1,6 @@
 import pandas as pd 
-
+import numpy as np
+import math
 class CustomDataFrame(pd.DataFrame):
     @property 
     def _constructor(self):
@@ -28,8 +29,11 @@ class CustomDataFrame(pd.DataFrame):
             else:
                 col_name = f"{segment} {field}"
             
-            if descriptions and name:
-                col_name = f"{col_name} {name}"
+            # if descriptions and name:
+            #     col_name = f"{col_name} {name}"
+            #     if 'description' in row:
+            #         if not pd.isna(row['description']):
+            #             col_name = f"{col_name} ({row['description']})"
             
             # Check if column already exists, and if so, append a new version with an incrementing number
             col_version = 1
@@ -50,7 +54,7 @@ def pandify(data):
     def parse(data=None, prefix=None, descriptions=False, flatten=False):
         
         rows = []
-        ids = {k: v for k, v in data.items() if k.endswith('_id')}
+        ids = {k: v for k, v in data.items() if k.endswith('_ID')}
 
         # Process segments 
         for segment in data.get('segments', []):

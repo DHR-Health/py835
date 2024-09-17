@@ -22,11 +22,7 @@ def generate_id():
     return api_key
 
 current_state = {
-    'header': {},
-    'header_cas': {},
-    'header_ref': {},
-    'header_lq': {},
-    'header_dtm': {},
+    'ISA': {},
     'GS':None,
     'ST':None,
     'CLP':None,
@@ -53,23 +49,24 @@ class Parser:
         return pyx12.x12context.X12ContextReader(params, errh, edi_file_stream)
 
     def unpack(self,segment):
-        seg_id = segment.id 
         seg_data = segment.seg_data 
         seg_node = segment.x12_map_node
 
-        # Append codes
-        if seg_id in ['REF','CAS','LQ','DTM']:
-            seg_id += seg_data.get_value(seg_id+'01')
+        amend_list = ['NM1','N101','N1','N2','N3','N4','DTM','PER']
 
         result = {
-            'segment': seg_id
+            'segment': segment.id + seg_data.get_value(segment.id+'01') if segment.id in amend_list else segment.id
         }
         for child in seg_node.children:
+            if segment.id in amend_list:
+                field = child.id + seg_data.get_value(segment.id+'01')
+            else:
+                field = child.id
             name = child.name
             value = seg_data.get_value(child.id)
             if type(value) == str:
                 value = value.strip()
-            result[child.id] = {
+            result[field] = {
                 'name':name, 
                 'value': value
             }
@@ -81,37 +78,45 @@ class Parser:
         # All available tables start empty.
         # Some of these will always be empty, but we include them for consistency.
         result = {
-            'HEADER': [],
-            'HEADER_CAS': [],
-            'HEADER_REF': [],
-            'HEADER_LQ': [],
-            'HEADER_DTM': [],
-            'FUNCTIONAL_GROUPS': [],
-            'FUNCTIONAL_GROUPS_CAS': [],
-            'FUNCTIONAL_GROUPS_REF': [],
-            'FUNCTIONAL_GROUPS_LQ': [],
-            'FUNCTIONAL_GROUPS_DTM': [],
-            'STATEMENTS': [],
-            'STATEMENTS_REF': [],
-            'STATEMENTS_DTM': [],
-            'CLAIMS': [],
-            'CLAIMS_CAS': [],
-            'CLAIMS_REF': [],
-            'CLAIMS_DTM': [],
-            'CLAIMS_LQ': [],
-            'SERVICES': [],
-            'SERVICES_CAS': [],
-            'SERVICES_REF': [],
-            'SERVICES_DTM': [],
-            'SERVICES_LQ': [],
+            'ISA': [],
+            'GS': [],
+            'ST': [],
+            'CLP': [],
+            'SVC': [],
+            'CAS': [],
+            'REF': [],
+            'LQ': [],
+            'DTM': [],
+            'AMT': [],
+            'PLB': [],
+            'NM1': [],
+            'MOA': [],
             'FOOTER': []
         }
-        header_id = None 
-        functional_group_id = None
-        statement_id = None
-        claim_id = None
-        service_id = None
-
+        ISA_ID = None 
+        GS_ID = None
+        ST_ID = None
+        CLP_ID = None
+        SVC_ID = None
+        CAS_ID = None
+        REF_ID = None
+        LQ_ID = None
+        DTM_ID = None
+        AMT_ID = None
+        NM1_ID = None
+        MOA_ID = None
+        PLB_ID = None
+        def get_current_level():
+            if SVC_ID is not None:
+                return 'SVC'
+            elif CLP_ID is not None:
+                return 'CLP'
+            elif ST_ID is not None:
+                return 'ST'
+            elif GS_ID is not None:
+                return 'GS'
+            else:
+                return 'ISA'
         for segment in reader.iter_segments():
             seg_id = segment.id
             seg_data = segment.seg_data 
@@ -120,25 +125,25 @@ class Parser:
             # Header
             ######################################
             if seg_id == 'ISA':
-                header_id = generate_id()
-                current_state['header'] = {
-                    'header_id': header_id,
+                ISA_ID = generate_id()
+                current_state['ISA'] = {
+                    'ISA_ID': ISA_ID,
                     'segments':[]
                 }
-                current_state['header']['segments'].append(self.unpack(segment))
-                result['HEADER'].append(current_state['header'])
+                current_state['ISA']['segments'].append(self.unpack(segment))
+                result['ISA'].append(current_state['ISA'])
             ######################################
             # Functional Groups
             ######################################
             elif seg_id == 'GS':
-                # Add the current GS segment to the header
+                # Add the current GS segment to the ISA
                 if current_state['GS'] is not None:
-                    result['FUNCTIONAL_GROUPS'].append(current_state['GS'])
+                    result['GS'].append(current_state['GS'])
                     # reset ids
-                    functional_group_id = None
-                    statement_id = None
-                    claim_id = None
-                    service_id = None
+                    GS_ID = None
+                    ST_ID = None
+                    CLP_ID = None
+                    SVC_ID = None
                 
                 # Reset cascading states 
                 current_state['GS'] = None
@@ -147,10 +152,10 @@ class Parser:
                 current_state['SVC'] = None
 
                 # Start a new current state
-                functional_group_id = generate_id()
+                GS_ID = generate_id()
                 current_state['GS'] = {
-                    'header_id':header_id,
-                    'functional_group_id': functional_group_id,
+                    'ISA_ID':ISA_ID,
+                    'GS_ID': GS_ID,
                     'segments':[]
                 }
                 current_state['GS']['segments'].append(self.unpack(segment))
@@ -160,11 +165,11 @@ class Parser:
             elif seg_id =='ST':
                 # Add the current ST segment to the functional group
                 if current_state['ST'] is not None:
-                    result['STATEMENTS'].append(current_state['ST'])
+                    result['ST'].append(current_state['ST'])
                     # reset ids
-                    statement_id = None
-                    claim_id = None
-                    service_id = None
+                    ST_ID = None
+                    CLP_ID = None
+                    SVC_ID = None
 
                 # Reset cascading states 
                 current_state['ST'] = None
@@ -172,11 +177,11 @@ class Parser:
                 current_state['SVC'] = None
                 
                 # Start a new current state
-                statement_id = generate_id()
+                ST_ID = generate_id()
                 current_state['ST'] = {
-                    'header_id': header_id,
-                    'functional_group_id':functional_group_id,
-                    'statement_id': statement_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID':GS_ID,
+                    'ST_ID': ST_ID,
                     'segments':[]
                 }
                 current_state['ST']['segments'].append(self.unpack(segment))
@@ -186,26 +191,26 @@ class Parser:
             elif seg_id == 'CLP':
                 # Add the current CLP segment to the statement
                 if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['CLP'].append(current_state['CLP'])
                     # reset ids
-                    claim_id = None
-                    service_id = None
-                    cas_id = None
-                    ref_id = None
-                    lq_id = None
-                    dtm_id = None
+                    CLP_ID = None
+                    SVC_ID = None
+                    CAS_ID = None
+                    REF_ID = None
+                    LQ_ID = None
+                    DTM_ID = None
 
                 # Reset cascading states
                 current_state['CLP'] = None
                 current_state['SVC'] = None
                 
                 # Start a new current state
-                claim_id = generate_id()
+                CLP_ID = generate_id()
                 current_state['CLP'] = {
-                    'header_id': header_id,
-                    'functional_group_id': functional_group_id,
-                    'statement_id': statement_id,
-                    'claim_id': claim_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
                     'segments':[]
                 }
                 current_state['CLP']['segments'].append(self.unpack(segment))
@@ -215,21 +220,21 @@ class Parser:
             elif seg_id == 'SVC':
                 # Add the current SVC segment to the claim
                 if current_state['SVC'] is not None:
-                    result['SERVICES'].append(current_state['SVC'])
+                    result['SVC'].append(current_state['SVC'])
                     # reset ids
-                    service_id = None
+                    SVC_ID = None
 
                 # Reset cascading states
                 current_state['SVC'] = None
 
                 # Start a new current state
-                service_id = generate_id()
+                SVC_ID = generate_id()
                 current_state['SVC'] = {
-                    'header_id': header_id,
-                    'functional_group_id': functional_group_id,
-                    'statement_id': statement_id,
-                    'claim_id': claim_id,
-                    'service_id': service_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
                     'segments':[]
                 }
                 current_state['SVC']['segments'].append(self.unpack(segment))
@@ -239,81 +244,37 @@ class Parser:
             elif seg_id == 'CAS':
                 current_state['CAS'] = None
                 # Start a new current state
-                cas_id = generate_id()
+                CAS_ID = generate_id()
                 current_state['CAS'] = {
-                    'header_id': header_id,
-                    'functional_group_id': functional_group_id,
-                    'statement_id': statement_id,
-                    'claim_id': claim_id,
-                    'service_id': service_id,
-                    'cas_id': cas_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
+                    'level': get_current_level(),
+                    'CAS_ID': CAS_ID,
                     'segments':[]
                 }
-                if current_state['SVC'] is not None:
-                    current_state['CAS']['segments'].append(self.unpack(segment))
-                    result['SERVICES_CAS'].append(current_state['CAS'])
-                elif current_state['CLP'] is not None:
-                    current_state['CAS'].pop('service_id')
-                    current_state['CAS']['segments'].append(self.unpack(segment))
-                    result['CLAIMS_CAS'].append(current_state['CAS'])
-                elif current_state['ST'] is not None:
-                    current_state['CAS'].pop('service_id')
-                    current_state['CAS'].pop('claim_id')
-                    current_state['CAS']['segments'].append(self.unpack(segment))
-                    result['GS'].append(current_state['CAS'])
-                elif current_state['FUNCTIONAL_GROUPS'] is not None:
-                    current_state['CAS'].pop('service_id')
-                    current_state['CAS'].pop('claim_id')
-                    current_state['CAS'].pop('statement_id')
-                    current_state['CAS']['segments'].append(self.unpack(segment))
-                    result['FUNCTIONAL_GROUPS_CAS'].append(current_state['CAS'])
-                else:
-                    current_state['CAS'].pop('service_id')
-                    current_state['CAS'].pop('claim_id')
-                    current_state['CAS'].pop('statement_id')
-                    current_state['CAS'].pop('functional_group_id')
-                    current_state['CAS']['segments'].append(self.unpack(segment))
-                    result['HEADER_CAS'].append(current_state['CAS'])
+                current_state['CAS']['segments'].append(self.unpack(segment))
+                result['CAS'].append(current_state['CAS'])
             ######################################
             # REF
             ######################################
             elif seg_id == 'REF':
                 # Start a new current state
-                ref_id = generate_id()
+                REF_ID = generate_id()
                 current_state['REF'] = {
-                    'header_id': header_id,
-                    'functional_group_id': functional_group_id,
-                    'statement_id': statement_id,
-                    'claim_id': claim_id,
-                    'service_id': service_id,
-                    'ref_id': ref_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
+                    'level': get_current_level(),
+                    'REF_ID': REF_ID,
                     'segments':[]
                 }
-                if current_state['SVC'] is not None:
-                    current_state['REF']['segments'].append(self.unpack(segment))
-                    result['SERVICES_REF'].append(current_state['REF'])
-                elif current_state['CLP'] is not None:
-                    current_state['REF'].pop('service_id')
-                    current_state['REF']['segments'].append(self.unpack(segment))
-                    result['CLAIMS_REF'].append(current_state['REF'])
-                elif current_state['ST'] is not None:
-                    current_state['REF'].pop('service_id')
-                    current_state['REF'].pop('claim_id')
-                    current_state['REF']['segments'].append(self.unpack(segment))
-                    result['STATEMENTS_REF'].append(current_state['REF'])
-                elif current_state['GS'] is not None:
-                    current_state['REF'].pop('service_id')
-                    current_state['REF'].pop('claim_id')
-                    current_state['REF'].pop('statement_id')
-                    current_state['REF']['segments'].append(self.unpack(segment))
-                    result['FUNCTIONAL_GROUPS_REF'].append(current_state['REF'])
-                else:
-                    current_state['REF'].pop('service_id')
-                    current_state['REF'].pop('claim_id')
-                    current_state['REF'].pop('statement_id')
-                    current_state['REF'].pop('functional_group_id')
-                    current_state['REF']['segments'].append(self.unpack(segment))
-                    result['HEADER_REF'].append(current_state['REF'])
+                current_state['REF']['segments'].append(self.unpack(segment))
+                result['REF'].append(current_state['REF'])
             ######################################
             # LQs
             ######################################
@@ -322,41 +283,19 @@ class Parser:
                 current_state['LQ'] = None
                 
                 # Start a new current state
-                lq_id = generate_id()
+                LQ_ID = generate_id()
                 current_state['LQ'] = {
-                    'header_id': header_id,
-                    'functional_group_id': functional_group_id,
-                    'statement_id': statement_id,
-                    'claim_id': claim_id,
-                    'service_id': service_id,
-                    'lq_id': lq_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
+                    'level': get_current_level(),
+                    'LQ_ID': LQ_ID,
                     'segments':[]
                 }
-                if current_state['SVC'] is not None:
-                    current_state['LQ']['segments'].append(self.unpack(segment))
-                    result['SERVICES_LQ'].append(current_state['LQ'])
-                elif current_state['CLP'] is not None:
-                    current_state['LQ'].pop('service_id')
-                    current_state['LQ']['segments'].append(self.unpack(segment))
-                    result['CLAIMS_LQ'].append(current_state['LQ'])
-                elif current_state['ST'] is not None:
-                    current_state['LQ'].pop('service_id')
-                    current_state['LQ'].pop('claim_id')
-                    current_state['LQ']['segments'].append(self.unpack(segment))
-                    result['STATEMENTS_LQ'].append(current_state['LQ'])
-                elif current_state['GS'] is not None:
-                    current_state['LQ'].pop('service_id')
-                    current_state['LQ'].pop('claim_id')
-                    current_state['LQ'].pop('statement_id')
-                    current_state['LQ']['segments'].append(self.unpack(segment))
-                    result['FUNCTIONAL_GROUPS_LQ'].append(current_state['LQ'])
-                else:
-                    current_state['LQ'].pop('service_id')
-                    current_state['LQ'].pop('claim_id')
-                    current_state['LQ'].pop('statement_id')
-                    current_state['LQ'].pop('functional_group_id')
-                    current_state['LQ']['segments'].append(self.unpack(segment))
-                    result['HEADER_LQ'].append(current_state['LQ'])
+                current_state['LQ']['segments'].append(self.unpack(segment))
+                result['LQ'].append(current_state['LQ'])
             ######################################
             # DTMs
             ######################################
@@ -365,113 +304,123 @@ class Parser:
                 current_state['DTM'] = None
                 
                 # Start a new current state
-                dtm_id = generate_id()
+                DTM_ID = generate_id()
                 current_state['DTM'] = {
-                    'header_id': header_id,
-                    'functional_group_id': functional_group_id,
-                    'statement_id': statement_id,
-                    'claim_id': claim_id,
-                    'service_id': service_id,
-                    'dtm_id': dtm_id,
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
+                    'level': get_current_level(),
+                    'DTM_ID': DTM_ID,
                     'segments':[]
                 }
-                if current_state['SVC'] is not None:
-                    current_state['DTM']['segments'].append(self.unpack(segment))
-                    result['SERVICES_DTM'].append(current_state['DTM'])
-                elif current_state['CLP'] is not None:
-                    current_state['DTM'].pop('service_id')
-                    current_state['DTM']['segments'].append(self.unpack(segment))
-                    result['CLAIMS_DTM'].append(current_state['DTM'])
-                elif current_state['ST'] is not None:
-                    current_state['DTM'].pop('service_id')
-                    current_state['DTM'].pop('claim_id')
-                    current_state['DTM']['segments'].append(self.unpack(segment))
-                    result['STATEMENTS_DTM'].append(current_state['DTM'])
-                elif current_state['GS'] is not None:
-                    current_state['DTM'].pop('service_id')
-                    current_state['DTM'].pop('claim_id')
-                    current_state['DTM'].pop('statement_id')
-                    current_state['DTM']['segments'].append(self.unpack(segment))
-                    result['FUNCTIONAL_GROUPS_DTM'].append(current_state['DTM'])
-                else:
-                    current_state['DTM'].pop('service_id')
-                    current_state['DTM'].pop('claim_id')
-                    current_state['DTM'].pop('statement_id')
-                    current_state['DTM'].pop('functional_group_id')
-                    current_state['DTM']['segments'].append(self.unpack(segment))
-                    result['HEADER_DTM'].append(current_state['DTM'])
-
+                current_state['DTM']['segments'].append(self.unpack(segment))
+                result['DTM'].append(current_state['DTM'])
+            ######################################
+            # AMT
+            ######################################
+            elif seg_id == 'AMT':
+                # Reset cascading states
+                current_state['AMT'] = None
+                
+                # Start a new current state
+                AMT_ID = generate_id()
+                current_state['AMT'] = {
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
+                    'level': get_current_level(),
+                    'AMT_ID': AMT_ID,
+                    'segments':[]
+                }
+                current_state['AMT']['segments'].append(self.unpack(segment))
+                result['AMT'].append(current_state['AMT'])
+            ######################################
+            # PLB
+            ######################################
+            elif seg_id == 'PLB':
+                # Reset cascading states
+                current_state['PLB'] = None
+                
+                # Start a new current state
+                PLB_ID = generate_id()
+                current_state['PLB'] = {
+                    'ISA_ID': ISA_ID,
+                    'GS_ID': GS_ID,
+                    'ST_ID': ST_ID,
+                    'CLP_ID': CLP_ID,
+                    'SVC_ID': SVC_ID,
+                    'level': get_current_level(),
+                    'PLB_ID': PLB_ID,
+                    'segments':[]
+                }
+                current_state['PLB']['segments'].append(self.unpack(segment))
+                result['PLB'].append(current_state['PLB'])
             ######################################
             # End of a Statement
             ######################################
             elif seg_id == 'SE':
                 # Add the last CLP segment if exists
                 if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['CLP'].append(current_state['CLP'])
+                    current_state['CLP'] = None
                 # Add the last service if exists 
                 if current_state['SVC'] is not None:
-                    result['SERVICES'].append(current_state['SVC'])
-                # Add the last claim if exists
-                if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['SVC'].append(current_state['SVC'])
+                    current_state['SVC'] = None
                 # Add the last statement if exists
                 if current_state['ST'] is not None:
-                    result['STATEMENTS'].append(current_state['ST'])
-                
-                # Reset cascading states 
-                current_state['ST'] = None
-                current_state['CLP'] = None
-                current_state['SVC'] = None
-                current_state['CAS'] = None
+                    result['ST'].append(current_state['ST'])
+                    current_state['ST'] = None
             ######################################
             # End of a functional group
             ######################################
             elif seg_id == 'GE':
                 # Add the last CLP segment if exists
                 if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['CLP'].append(current_state['CLP'])
+                    current_state['CLP'] = None
                 # Add the last service if exists 
                 if current_state['SVC'] is not None:
-                    result['SERVICES'].append(current_state['SVC'])
-                # Add the last claim if exists
-                if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['SVC'].append(current_state['SVC'])
+                    current_state['SVC'] = None
                 # Add the last statement if exists
                 if current_state['ST'] is not None:
-                    result['STATEMENTS'].append(current_state['ST'])
+                    result['SVC'].append(current_state['ST'])
+                    current_state['ST'] = None
                 # Add the last functional group if exists
                 if current_state['GS'] is not None:
-                    result['FUNCTIONAL_GROUPS'].append(current_state['GS'])
+                    result['GS'].append(current_state['GS'])
+                    current_state['GS'] = None
                 
-                # Reset cascading states 
-                current_state['GS'] = None
-                current_state['ST'] = None
-                current_state['CLP'] = None
-                current_state['SVC'] = None
-                current_state['CAS'] = None
             ######################################
             # End of file
             ######################################
             elif seg_id == 'IEA':
                 # Add the last CLP segment if exists
                 if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['CLP'].append(current_state['CLP'])
+                    current_state['CLP'] = None
                 # Add the last service if exists 
                 if current_state['SVC'] is not None:
-                    result['SERVICES'].append(current_state['SVC'])
-                # Add the last claim if exists
-                if current_state['CLP'] is not None:
-                    result['CLAIMS'].append(current_state['CLP'])
+                    result['SVC'].append(current_state['SVC'])
+                    current_state['SVC'] = None
                 # Add the last statement if exists
                 if current_state['ST'] is not None:
-                    result['STATEMENTS'].append(current_state['ST'])
+                    result['SVC'].append(current_state['ST'])
+                    current_state['ST'] = None
                 # Add the last functional group if exists
                 if current_state['GS'] is not None:
-                    result['FUNCTIONAL_GROUPS'].append(current_state['GS'])
-                current_state['CLP'] = {
-                    'header_id': header_id
+                    result['GS'].append(current_state['GS'])
+                    current_state['GS'] = None
+                current_state['FOOTER'] = {
+                    'ISA_ID': ISA_ID
                 }
-                result['FOOTER'].append(self.unpack(segment))
+                current_state['FOOTER'].update(self.unpack(segment))
+                result['FOOTER'].append(current_state['FOOTER'])
             else:
                 if current_state['SVC'] is not None:
                     current_state['SVC']['segments'].append(self.unpack(segment))
@@ -482,69 +431,63 @@ class Parser:
                 elif current_state['GS'] is not None:
                     current_state['GS']['segments'].append(self.unpack(segment))
                 else:
-                    result['HEADER'].append(self.unpack(segment))
+                    result['ISA'].append(self.unpack(segment))
 
         self.dict = {x:result[x] for x in result if result[x]}
         self.TABLES = pandify(self.dict)
 
-    def flatten(self,prefix = None,table_names = True, descriptions=False):
-        flattend_dfs = {}
-        for key, table in self.TABLES.items():
-            prefix_string = ''
-            if prefix:
-                prefix_string = f"{prefix}"
-            if table_names:
-                prefix_string = f"{prefix_string}{key} "
-            flattend_dfs[key] = table.flatten(prefix=prefix_string,descriptions=descriptions)
+    # def flatten(self,prefix = None,table_names = True, descriptions=False):
+    #     flattend_dfs = {}
+    #     for key, table in self.TABLES.items():
+    #         prefix_string = ''
+    #         if prefix:
+    #             prefix_string = f"{prefix}"
+    #         if table_names:
+    #             prefix_string = f"{prefix_string}{key} "
+    #         flattend_dfs[key] = table.flatten(prefix=prefix_string,descriptions=descriptions)
 
 
-        df = flattend_dfs['HEADER']
-        if 'HEADER_CAS' in flattend_dfs:
-            df = df.merge(flattend_dfs['HEADER_CAS'],on=['header_id'],how='left')
-        if 'HEADER_REF' in flattend_dfs:
-            df = df.merge(flattend_dfs['HEADER_REF'],on=['header_id'],how='left')
-        if 'HEADER_LQ' in flattend_dfs:
-            df = df.merge(flattend_dfs['HEADER_LQ'],on=['header_id'],how='left')
-        if 'HEADER_DTM' in flattend_dfs:
-            df = df.merge(flattend_dfs['HEADER_DTM'],on=['header_id'],how='left')
-        if 'FUNCTIONAL_GROUPS' in flattend_dfs.keys():
-            df = df.merge(flattend_dfs['FUNCTIONAL_GROUPS'],on=['header_id'],how='left')
-        if 'FUNCTIONAL_GROUPS_CAS' in flattend_dfs:
-            df = df.merge(flattend_dfs['FUNCTIONAL_GROUPS_CAS'],on=['header_id','functional_group_id'],how='left')
-        if 'FUNCTIONAL_GROUPS_REF' in flattend_dfs:
-            df = df.merge(flattend_dfs['FUNCTIONAL_GROUPS_REF'],on=['header_id','functional_group_id'],how='left')
-        if 'FUNCTIONAL_GROUPS_LQ' in flattend_dfs:
-            df = df.merge(flattend_dfs['FUNCTIONAL_GROUPS_LQ'],on=['header_id','functional_group_id'],how='left')
-        if 'FUNCTIONAL_GROUPS_DTM' in flattend_dfs:
-            df = df.merge(flattend_dfs['FUNCTIONAL_GROUPS_DTM'],on=['header_id','functional_group_id'],how='left')
-        if 'STATEMENTS' in flattend_dfs:
-            df = df.merge(flattend_dfs['STATEMENTS'],on=['header_id','functional_group_id'],how='left')
-        if 'STATEMENTS_CAS' in flattend_dfs:
-            df = df.merge(flattend_dfs['STATEMENTS_CAS'],on=['header_id','functional_group_id','statement_id'],how='left')
-        if 'STATEMENTS_REF' in flattend_dfs:
-            df = df.merge(flattend_dfs['STATEMENTS_REF'],on=['header_id','functional_group_id','statement_id'],how='left')
-        if 'STATEMENTS_LQ' in flattend_dfs:
-            df = df.merge(flattend_dfs['STATEMENTS_LQ'],on=['header_id','functional_group_id','statement_id'],how='left')
-        if 'STATEMENTS_DTM' in flattend_dfs:
-            df = df.merge(flattend_dfs['STATEMENTS_DTM'],on=['header_id','functional_group_id','statement_id'],how='left')
-        if 'CLAIMS' in flattend_dfs:
-            df = df.merge(flattend_dfs['CLAIMS'],on=['header_id','functional_group_id','statement_id'],how='left')
-        if 'CLAIMS_CAS' in flattend_dfs:
-            df = df.merge(flattend_dfs['CLAIMS_CAS'],on=['header_id','functional_group_id','statement_id','claim_id'],how='left')
-        if 'CLAIMS_REF' in flattend_dfs:
-            df = df.merge(flattend_dfs['CLAIMS_REF'],on=['header_id','functional_group_id','statement_id','claim_id'],how='left')
-        if 'CLAIMS_LQ' in flattend_dfs:
-            df = df.merge(flattend_dfs['CLAIMS_LQ'],on=['header_id','functional_group_id','statement_id','claim_id'],how='left')
-        if 'CLAIMS_DTM' in flattend_dfs:
-            df = df.merge(flattend_dfs['CLAIMS_DTM'],on=['header_id','functional_group_id','statement_id','claim_id'],how='left')
-        if 'SERVICES' in flattend_dfs:
-            df = df.merge(flattend_dfs['SERVICES'],on=['header_id','functional_group_id','statement_id','claim_id'],how='left')
-        if 'SERVICES_CAS' in flattend_dfs:
-            df = df.merge(flattend_dfs['SERVICES_CAS'],on=['header_id','functional_group_id','statement_id','claim_id','service_id'],how='left')
-        if 'SERVICES_REF' in flattend_dfs:
-            df = df.merge(flattend_dfs['SERVICES_REF'],on=['header_id','functional_group_id','statement_id','claim_id','service_id'],how='left')
-        if 'SERVICES_LQ' in flattend_dfs:
-            df = df.merge(flattend_dfs['SERVICES_LQ'],on=['header_id','functional_group_id','statement_id','claim_id','service_id'],how='left')
-        if 'SERVICES_DTM' in flattend_dfs:
-            df = df.merge(flattend_dfs['SERVICES_DTM'],on=['header_id','functional_group_id','statement_id','claim_id','service_id'],how='left')
-        return df
+    #     df = flattend_dfs['ISA']
+    #     if 'CAS' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['CAS'],on=['ISA_ID'],how='left')
+    #     if 'ISA_REF' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['ISA_REF'],on=['ISA_ID'],how='left')
+    #     if 'ISA_LQ' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['ISA_LQ'],on=['ISA_ID'],how='left')
+    #     if 'ISA_DTM' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['ISA_DTM'],on=['ISA_ID'],how='left')
+    #     if 'GS' in flattend_dfs.keys():
+    #         df = df.merge(flattend_dfs['GS'],on=['ISA_ID'],how='left')
+    #     if 'GS_REF' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['GS_REF'],on=['ISA_ID','GS_ID'],how='left')
+    #     if 'GS_LQ' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['GS_LQ'],on=['ISA_ID','GS_ID'],how='left')
+    #     if 'GS_DTM' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['GS_DTM'],on=['ISA_ID','GS_ID'],how='left')
+    #     if 'SVC' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC'],on=['ISA_ID','GS_ID'],how='left')
+    #     if 'SVC_REF' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_REF'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
+    #     if 'SVC_LQ' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_LQ'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
+    #     if 'SVC_DTM' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_DTM'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
+    #     if 'CLP' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['CLP'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
+    #     if 'CLP_REF' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['CLP_REF'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
+    #     if 'CLP_LQ' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['CLP_LQ'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
+    #     if 'CLP_DTM' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['CLP_DTM'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
+    #     if 'SVC' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
+    #     if 'SVC_CAS' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_CAS'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
+    #     if 'SVC_REF' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_REF'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
+    #     if 'SVC_LQ' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_LQ'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
+    #     if 'SVC_DTM' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['SVC_DTM'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
+    #     return df
