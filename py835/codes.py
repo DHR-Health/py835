@@ -2,6 +2,7 @@ import sqlite3
 import importlib.resources
 import csv
 import os 
+import pandas as pd
 
 def connect():
     """Connect to the SQLite database packaged with the module."""
