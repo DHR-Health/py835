@@ -8,7 +8,7 @@ def connect():
     """Connect to the SQLite database packaged with the module."""
     try:
         # Use importlib.resources to locate the 'codes.db' file in the 'codes' subpackage
-        with importlib.resources.path('py835.codes', 'codes.db') as db_path:
+        with importlib.resources.path('py835', 'codes/codes.db') as db_path:
             return sqlite3.connect(str(db_path))
     except Exception as e:
         print(f"Error opening database: {e}")
@@ -136,7 +136,7 @@ def update_cas01_codes():
 ##########################################################################################
 def update_claim_adjustment_reason_codes():
     conn = connect()
-    with importlib.resources.path('py835.codes', 'claim_adjustment_reason_codes.csv') as file_path:
+    with importlib.resources.path('py835', 'codes/claim_adjustment_reason_codes.csv') as file_path:
         claim_adjustment_reason_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = ['CAS02','CAS05','CAS08','CAS11','CAS14','CAS17']
     dfs = []
@@ -151,7 +151,7 @@ def update_claim_adjustment_reason_codes():
 ##########################################################################################
 def update_claim_status_category_codes():
     conn = connect()
-    with importlib.resources.path('py835.codes', 'claim_status_category_codes.csv') as file_path:
+    with importlib.resources.path('py835', 'codes/claim_status_category_codes.csv') as file_path:
         claim_status_category_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = []
     dfs = []
@@ -168,7 +168,7 @@ def update_claim_status_category_codes():
 ##########################################################################################
 def update_claim_status_codes():
     conn = connect()
-    with importlib.resources.path('py835.codes', 'claim_status_codes.csv') as file_path:
+    with importlib.resources.path('py835', 'codes/claim_status_codes.csv') as file_path:
         claim_status_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = ['CLP02']
     dfs = []
@@ -184,7 +184,7 @@ def update_claim_status_codes():
 ##########################################################################################
 def update_provider_adjustment_reason_codes():
     conn = connect()
-    with importlib.resources.path('py835.codes', 'provider_adjustment_reason_codes.csv') as file_path:
+    with importlib.resources.path('py835', 'codes/provider_adjustment_reason_codes.csv') as file_path:
         provider_adjustment_reason_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = ['PLB03']
     dfs = []
