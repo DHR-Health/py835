@@ -1,10 +1,17 @@
+import sqlite3
+import importlib.resources
 import csv
 import os 
 
-import pandas as pd 
-import sqlite3 
-
-BASE_DIR = os.path.dirname(__file__)
+def connect():
+    """Connect to the SQLite database packaged with the module."""
+    try:
+        # Use importlib.resources to locate the 'codes.db' file in the 'codes' subpackage
+        with importlib.resources.path('py835.codes', 'codes.db') as db_path:
+            return sqlite3.connect(str(db_path))
+    except Exception as e:
+        print(f"Error opening database: {e}")
+        raise
 
 def import_csv_to_dict(file_path):
     """Import a CSV file and return a dictionary."""
@@ -16,10 +23,6 @@ def import_csv_to_dict(file_path):
             data_dict[row['Code']] = row['Description']
 
     return data_dict
-
-def connect():
-    #return sqlite3.connect('py835/codes/codes.db')
-    return sqlite3.connect(os.path.join(BASE_DIR, 'codes', 'codes.db'))
 
 def get(segment = None, field = None, value=None):
     conn = connect()
