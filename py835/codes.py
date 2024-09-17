@@ -136,7 +136,8 @@ def update_cas01_codes():
 ##########################################################################################
 def update_claim_adjustment_reason_codes():
     conn = connect()
-    claim_adjustment_reason_codes = pd.read_csv('py835/codes/claim_adjustment_reason_codes.csv').rename({'Code':'value', 'Description':'description'}, axis=1)
+    with importlib.resources.path('py835.codes', 'claim_adjustment_reason_codes.csv') as file_path:
+        claim_adjustment_reason_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = ['CAS02','CAS05','CAS08','CAS11','CAS14','CAS17']
     dfs = []
     for field in fields:
@@ -150,7 +151,8 @@ def update_claim_adjustment_reason_codes():
 ##########################################################################################
 def update_claim_status_category_codes():
     conn = connect()
-    claim_status_category_codes = pd.read_csv('py835/codes/claim_status_category_codes.csv').rename({'Code':'value', 'Description':'description'}, axis=1)
+    with importlib.resources.path('py835.codes', 'claim_status_category_codes.csv') as file_path:
+        claim_status_category_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = []
     dfs = []
     for field in fields:
@@ -166,7 +168,8 @@ def update_claim_status_category_codes():
 ##########################################################################################
 def update_claim_status_codes():
     conn = connect()
-    claim_status_codes = pd.read_csv('py835/codes/claim_status_codes.csv').rename({'Code':'value', 'Description':'description'}, axis=1)
+    with importlib.resources.path('py835.codes', 'claim_status_codes.csv') as file_path:
+        claim_status_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = ['CLP02']
     dfs = []
     for field in fields:
@@ -175,12 +178,14 @@ def update_claim_status_codes():
         dfs.append(df)
     claim_status_codes = pd.concat(dfs, axis=0)
     claim_status_codes.to_sql('codes', conn, index=False, if_exists='append')
+
 ##########################################################################################
 # Provider Adjustment Reason Codes
 ##########################################################################################
 def update_provider_adjustment_reason_codes():
     conn = connect()
-    provider_adjustment_reason_codes = pd.read_csv('py835/codes/provider_adjustment_reason_codes.csv').rename({'Code':'value', 'Description':'description'}, axis=1)
+    with importlib.resources.path('py835.codes', 'provider_adjustment_reason_codes.csv') as file_path:
+        provider_adjustment_reason_codes = pd.read_csv(file_path).rename({'Code':'value', 'Description':'description'}, axis=1)
     fields = ['PLB03']
     dfs = []
     for field in fields:
@@ -189,6 +194,7 @@ def update_provider_adjustment_reason_codes():
         dfs.append(df)
     provider_adjustment_reason_codes = pd.concat(dfs, axis=0)
     provider_adjustment_reason_codes.to_sql('codes', conn, index=False, if_exists='append')
+
 ##########################################################################################
 # Update all codes
 ##########################################################################################
