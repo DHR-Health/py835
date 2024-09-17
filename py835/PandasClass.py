@@ -1,6 +1,7 @@
 import pandas as pd 
 import numpy as np
 import math
+
 class CustomDataFrame(pd.DataFrame):
     @property 
     def _constructor(self):
@@ -55,6 +56,8 @@ def pandify(data):
         
         rows = []
         ids = {k: v for k, v in data.items() if k.endswith('_ID')}
+        if 'level' in data:
+            ids['level'] = data['level']
 
         # Process segments 
         for segment in data.get('segments', []):

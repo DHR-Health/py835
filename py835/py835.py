@@ -98,14 +98,7 @@ class Parser:
         ST_ID = None
         CLP_ID = None
         SVC_ID = None
-        CAS_ID = None
-        REF_ID = None
-        LQ_ID = None
-        DTM_ID = None
-        AMT_ID = None
-        NM1_ID = None
-        MOA_ID = None
-        PLB_ID = None
+        LEAF_ID = None
         def get_current_level():
             if SVC_ID is not None:
                 return 'SVC'
@@ -244,7 +237,6 @@ class Parser:
             elif seg_id == 'CAS':
                 current_state['CAS'] = None
                 # Start a new current state
-                CAS_ID = generate_id()
                 current_state['CAS'] = {
                     'ISA_ID': ISA_ID,
                     'GS_ID': GS_ID,
@@ -252,7 +244,7 @@ class Parser:
                     'CLP_ID': CLP_ID,
                     'SVC_ID': SVC_ID,
                     'level': get_current_level(),
-                    'CAS_ID': CAS_ID,
+                    'LEAF_ID': generate_id(),
                     'segments':[]
                 }
                 current_state['CAS']['segments'].append(self.unpack(segment))
@@ -262,7 +254,6 @@ class Parser:
             ######################################
             elif seg_id == 'REF':
                 # Start a new current state
-                REF_ID = generate_id()
                 current_state['REF'] = {
                     'ISA_ID': ISA_ID,
                     'GS_ID': GS_ID,
@@ -270,7 +261,7 @@ class Parser:
                     'CLP_ID': CLP_ID,
                     'SVC_ID': SVC_ID,
                     'level': get_current_level(),
-                    'REF_ID': REF_ID,
+                    'LEAF_ID': generate_id(),
                     'segments':[]
                 }
                 current_state['REF']['segments'].append(self.unpack(segment))
@@ -283,7 +274,6 @@ class Parser:
                 current_state['LQ'] = None
                 
                 # Start a new current state
-                LQ_ID = generate_id()
                 current_state['LQ'] = {
                     'ISA_ID': ISA_ID,
                     'GS_ID': GS_ID,
@@ -291,7 +281,7 @@ class Parser:
                     'CLP_ID': CLP_ID,
                     'SVC_ID': SVC_ID,
                     'level': get_current_level(),
-                    'LQ_ID': LQ_ID,
+                    'LEAF_ID': generate_id(),
                     'segments':[]
                 }
                 current_state['LQ']['segments'].append(self.unpack(segment))
@@ -304,7 +294,6 @@ class Parser:
                 current_state['DTM'] = None
                 
                 # Start a new current state
-                DTM_ID = generate_id()
                 current_state['DTM'] = {
                     'ISA_ID': ISA_ID,
                     'GS_ID': GS_ID,
@@ -312,7 +301,7 @@ class Parser:
                     'CLP_ID': CLP_ID,
                     'SVC_ID': SVC_ID,
                     'level': get_current_level(),
-                    'DTM_ID': DTM_ID,
+                    'LEAF_ID': generate_id(),
                     'segments':[]
                 }
                 current_state['DTM']['segments'].append(self.unpack(segment))
@@ -325,7 +314,6 @@ class Parser:
                 current_state['AMT'] = None
                 
                 # Start a new current state
-                AMT_ID = generate_id()
                 current_state['AMT'] = {
                     'ISA_ID': ISA_ID,
                     'GS_ID': GS_ID,
@@ -333,7 +321,7 @@ class Parser:
                     'CLP_ID': CLP_ID,
                     'SVC_ID': SVC_ID,
                     'level': get_current_level(),
-                    'AMT_ID': AMT_ID,
+                    'LEAF_ID': generate_id(),
                     'segments':[]
                 }
                 current_state['AMT']['segments'].append(self.unpack(segment))
@@ -346,7 +334,6 @@ class Parser:
                 current_state['PLB'] = None
                 
                 # Start a new current state
-                PLB_ID = generate_id()
                 current_state['PLB'] = {
                     'ISA_ID': ISA_ID,
                     'GS_ID': GS_ID,
@@ -354,7 +341,7 @@ class Parser:
                     'CLP_ID': CLP_ID,
                     'SVC_ID': SVC_ID,
                     'level': get_current_level(),
-                    'PLB_ID': PLB_ID,
+                    'LEAF_ID': generate_id(),
                     'segments':[]
                 }
                 current_state['PLB']['segments'].append(self.unpack(segment))
@@ -436,6 +423,32 @@ class Parser:
         self.dict = {x:result[x] for x in result if result[x]}
         self.TABLES = pandify(self.dict)
 
+    def aggregate_leaf(self,group,name):
+        grouped = group.groupby('LEAF_ID').apply(
+            lambda x: {f"{row['field']}": row['value'] for _, row in x.iterrows()},
+            include_groups = False
+        ).reset_index(name=name)
+        return grouped[name]
+    def aggregate_leaves(self,df,name):
+        ids = ['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID','level']
+        test = df[ids+['LEAF_ID','field','name','value']].groupby(ids,dropna=False).apply(
+            lambda x: list(self.aggregate_leaf(x, name)), 
+            include_groups=False
+        ).reset_index(name=name)
+        return test
+    def combine_CAS(self):
+        return self.aggregate_leaves(self.TABLES['CAS'],'CAS')
+    def combine_REF(self):
+        return self.aggregate_leaves(self.TABLES['REF'],'REF')
+    def combine_LQ(self):
+        return self.aggregate_leaves(self.TABLES['LQ'],'LQ')
+    def combine_DTM(self):
+        return self.aggregate_leaves(self.TABLES['DTM'],'DTM')
+    def combine_AMT(self):
+        return self.aggregate_leaves(self.TABLES['AMT'],'AMT')
+    def combine_PLB(self):
+        return self.aggregate_leaves(self.TABLES['PLB'],'PLB')
+    
     # def flatten(self,prefix = None,table_names = True, descriptions=False):
     #     flattend_dfs = {}
     #     for key, table in self.TABLES.items():
@@ -446,48 +459,49 @@ class Parser:
     #             prefix_string = f"{prefix_string}{key} "
     #         flattend_dfs[key] = table.flatten(prefix=prefix_string,descriptions=descriptions)
 
-
     #     df = flattend_dfs['ISA']
     #     if 'CAS' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['CAS'],on=['ISA_ID'],how='left')
-    #     if 'ISA_REF' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['ISA_REF'],on=['ISA_ID'],how='left')
-    #     if 'ISA_LQ' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['ISA_LQ'],on=['ISA_ID'],how='left')
-    #     if 'ISA_DTM' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['ISA_DTM'],on=['ISA_ID'],how='left')
-    #     if 'GS' in flattend_dfs.keys():
+    #         ISA_CAS = flattend_dfs['CAS'][flattend_dfs['CAS']['level'] == 'ISA']
+    #         # Concatenate to create a single line per ISA
+    #         ISA_CAS = ISA_CAS.groupby('ISA_ID').agg(lambda x: x.tolist()).reset_index()
+    #         if ISA_CAS.shape[0] > 0:
+    #             df = df.merge(ISA_CAS,on=['ISA_ID'],how='left')
+            
+    #     if 'REF' in flattend_dfs:
+    #         ISA_REF = flattend_dfs['REF'][flattend_dfs['REF']['level'] == 'ISA']
+    #         if ISA_REF.shape[0] > 0:
+    #             df = df.merge(ISA_REF,on=['ISA_ID'],how='left')
+    #     if 'DTM' in flattend_dfs:
+    #         ISA_DTM = flattend_dfs['DTM'][flattend_dfs['DTM']['level'] == 'ISA']
+    #         if ISA_DTM.shape[0] > 0:
+    #             df = df.merge(ISA_DTM,on=['ISA_ID'],how='left')
+    #     if 'LQ' in flattend_dfs:
+    #         ISA_LQ = flattend_dfs['LQ'][flattend_dfs['LQ']['level'] == 'ISA']
+    #         if ISA_LQ.shape[0] > 0:
+    #             df = df.merge(ISA_LQ,on=['ISA_ID'],how='left')
+    #     if 'AMT' in flattend_dfs:
+    #         ISA_AMT = flattend_dfs['AMT'][flattend_dfs['AMT']['level'] == 'ISA']
+    #         if ISA_AMT.shape[0] > 0:
+    #             df = df.merge(ISA_AMT,on=['ISA_ID'],how='left')
+    #     if 'PLB' in flattend_dfs:
+    #         ISA_PLB = flattend_dfs['PLB'][flattend_dfs['PLB']['level'] == 'ISA']
+    #         if ISA_PLB.shape[0] > 0:
+    #             df = df.merge(ISA_PLB,on=['ISA_ID'],how='left')
+
+    #     if 'GS' in flattend_dfs:
     #         df = df.merge(flattend_dfs['GS'],on=['ISA_ID'],how='left')
-    #     if 'GS_REF' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['GS_REF'],on=['ISA_ID','GS_ID'],how='left')
-    #     if 'GS_LQ' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['GS_LQ'],on=['ISA_ID','GS_ID'],how='left')
-    #     if 'GS_DTM' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['GS_DTM'],on=['ISA_ID','GS_ID'],how='left')
-    #     if 'SVC' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC'],on=['ISA_ID','GS_ID'],how='left')
-    #     if 'SVC_REF' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_REF'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
-    #     if 'SVC_LQ' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_LQ'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
-    #     if 'SVC_DTM' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_DTM'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
+    #     if 'CAS' in flattend_dfs:
+    #         GS_CASE = flattend_dfs['CAS'][flattend_dfs['CAS']['level'] == 'GS']
+    #         if GS_CASE.shape[0] > 0:
+    #             df = df.merge(GS_CASE,on=['ISA_ID','GS_ID'],how='left')
+        
+
+    #     if 'ST' in flattend_dfs:
+    #         df = df.merge(flattend_dfs['ST'],on=['ISA_ID','GS_ID'],how='left')
     #     if 'CLP' in flattend_dfs:
     #         df = df.merge(flattend_dfs['CLP'],on=['ISA_ID','GS_ID','ST_ID'],how='left')
-    #     if 'CLP_REF' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['CLP_REF'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
-    #     if 'CLP_LQ' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['CLP_LQ'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
-    #     if 'CLP_DTM' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['CLP_DTM'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
     #     if 'SVC' in flattend_dfs:
     #         df = df.merge(flattend_dfs['SVC'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID'],how='left')
-    #     if 'SVC_CAS' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_CAS'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
-    #     if 'SVC_REF' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_REF'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
-    #     if 'SVC_LQ' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_LQ'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
-    #     if 'SVC_DTM' in flattend_dfs:
-    #         df = df.merge(flattend_dfs['SVC_DTM'],on=['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID'],how='left')
-    #     return df
+    #     if 'CAS' in flattend_dfs:
+    #         ISA_CAS = flattend_dfs['CAS'][flattend_dfs['CAS']['level'] == 'ISA']
+    #         df = df.merge(ISA_CAS,on=['ISA_ID'],how='left')
