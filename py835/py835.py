@@ -121,6 +121,9 @@ class Parser:
                 ISA_ID = generate_id()
                 current_state['ISA'] = {
                     'ISA_ID': ISA_ID,
+                    'CONTROL_NUMBER': seg_data.get_value('ISA13'),
+                    'INTERCHANGE_DATE': seg_data.get_value('ISA09'),
+                    'INTERCHANGE_TIME': seg_data.get_value('ISA10'),
                     'segments':[]
                 }
                 current_state['ISA']['segments'].append(self.unpack(segment))
@@ -404,9 +407,11 @@ class Parser:
                     result['GS'].append(current_state['GS'])
                     current_state['GS'] = None
                 current_state['FOOTER'] = {
-                    'ISA_ID': ISA_ID
+                    'ISA_ID': ISA_ID,
+                    'CONTROL_NUMBER': seg_data.get_value('IEA02'),
+                    'segments':[]
                 }
-                current_state['FOOTER'].update(self.unpack(segment))
+                current_state['FOOTER']['segments'].append(self.unpack(segment))
                 result['FOOTER'].append(current_state['FOOTER'])
             else:
                 if current_state['SVC'] is not None:
@@ -420,34 +425,34 @@ class Parser:
                 else:
                     result['ISA'].append(self.unpack(segment))
 
-        self.dict = {x:result[x] for x in result if result[x]}
+        self.dict = { x: result[x] for x in result if result[x] }
         self.TABLES = pandify(self.dict)
 
-    def aggregate_leaf(self,group,name):
-        grouped = group.groupby('LEAF_ID').apply(
-            lambda x: {f"{row['field']}": row['value'] for _, row in x.iterrows()},
-            include_groups = False
-        ).reset_index(name=name)
-        return grouped[name]
-    def aggregate_leaves(self,df,name):
-        ids = ['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID','level']
-        test = df[ids+['LEAF_ID','field','name','value']].groupby(ids,dropna=False).apply(
-            lambda x: list(self.aggregate_leaf(x, name)), 
-            include_groups=False
-        ).reset_index(name=name)
-        return test
-    def combine_CAS(self):
-        return self.aggregate_leaves(self.TABLES['CAS'],'CAS')
-    def combine_REF(self):
-        return self.aggregate_leaves(self.TABLES['REF'],'REF')
-    def combine_LQ(self):
-        return self.aggregate_leaves(self.TABLES['LQ'],'LQ')
-    def combine_DTM(self):
-        return self.aggregate_leaves(self.TABLES['DTM'],'DTM')
-    def combine_AMT(self):
-        return self.aggregate_leaves(self.TABLES['AMT'],'AMT')
-    def combine_PLB(self):
-        return self.aggregate_leaves(self.TABLES['PLB'],'PLB')
+    # def aggregate_leaf(self,group,name):
+    #     grouped = group.groupby('LEAF_ID').apply(
+    #         lambda x: {f"{row['field']}": row['value'] for _, row in x.iterrows()},
+    #         include_groups = False
+    #     ).reset_index(name=name)
+    #     return grouped[name]
+    # def aggregate_leaves(self,df,name):
+    #     ids = ['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID','level']
+    #     test = df[ids+['LEAF_ID','field','name','value']].groupby(ids,dropna=False).apply(
+    #         lambda x: list(self.aggregate_leaf(x, name)), 
+    #         include_groups=False
+    #     ).reset_index(name=name)
+    #     return test
+    # def combine_CAS(self):
+    #     return self.aggregate_leaves(self.TABLES['CAS'],'CAS')
+    # def combine_REF(self):
+    #     return self.aggregate_leaves(self.TABLES['REF'],'REF')
+    # def combine_LQ(self):
+    #     return self.aggregate_leaves(self.TABLES['LQ'],'LQ')
+    # def combine_DTM(self):
+    #     return self.aggregate_leaves(self.TABLES['DTM'],'DTM')
+    # def combine_AMT(self):
+    #     return self.aggregate_leaves(self.TABLES['AMT'],'AMT')
+    # def combine_PLB(self):
+    #     return self.aggregate_leaves(self.TABLES['PLB'],'PLB')
     
     # def flatten(self,prefix = None,table_names = True, descriptions=False):
     #     flattend_dfs = {}
