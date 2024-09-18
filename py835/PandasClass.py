@@ -51,6 +51,11 @@ class CustomDataFrame(pd.DataFrame):
 
         return flattened_df
     
+class LeafDataFrame(CustomDataFrame):
+    @property 
+    def _constructor(self):
+        return LeafDataFrame
+
     def aggregate_leaf(self,group,name):
         if 'LEAF_ID' not in self.columns:
             print("This function is for CAS, REF, DTM, LQ, AMT, and PLB segments only")
@@ -127,4 +132,6 @@ def pandify(data):
         if table:
             TABLES[name] = pd.concat([parse(x) for x in table])
             TABLES[name] = CustomDataFrame(TABLES[name])
+            if name in ['CAS','REF','DTM','LQ','AMT','PLB']:
+                TABLES[name] = LeafDataFrame(TABLES[name])
     return TABLES
