@@ -20,7 +20,8 @@ dependencies = [
     "pyx12>=2.3.3",
     "setuptools>=74.1.2",
     "numpy>=2.1.1",
-    "pandas>=2.2.2"
+    "pandas>=2.2.2",
+    "psycopg2>=2.9.9"
 ]
 
 [project.urls]

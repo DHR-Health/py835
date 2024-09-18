@@ -80,8 +80,7 @@ def pandify(data):
         rows = []
         ids = {k: v for k, v in data.items() if k.endswith('_ID')}
         working_on = data.get('segment', None)
-        print(data)
-        
+
         # Handle extra fields
         for key in ['CONTROL_NUMBER', 'INTERCHANGE_DATE', 'INTERCHANGE_TIME','level']:
             if key in data:
