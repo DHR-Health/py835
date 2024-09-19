@@ -91,7 +91,7 @@ class Parser:
             'PLB': [],
             'NM1': [],
             'MOA': [],
-            'FOOTER': []
+            'IEA': []
         }
         ISA_ID = None 
         GS_ID = None
@@ -406,13 +406,13 @@ class Parser:
                 if current_state['GS'] is not None:
                     result['GS'].append(current_state['GS'])
                     current_state['GS'] = None
-                current_state['FOOTER'] = {
+                current_state['IEA'] = {
                     'ISA_ID': ISA_ID,
                     'CONTROL_NUMBER': seg_data.get_value('IEA02'),
                     'segments':[]
                 }
-                current_state['FOOTER']['segments'].append(self.unpack(segment))
-                result['FOOTER'].append(current_state['FOOTER'])
+                current_state['IEA']['segments'].append(self.unpack(segment))
+                result['IEA'].append(current_state['IEA'])
             else:
                 if current_state['SVC'] is not None:
                     current_state['SVC']['segments'].append(self.unpack(segment))
@@ -428,32 +428,6 @@ class Parser:
         self.dict = { x: result[x] for x in result if result[x] }
         self.TABLES = pandify(self.dict)
 
-    # def aggregate_leaf(self,group,name):
-    #     grouped = group.groupby('LEAF_ID').apply(
-    #         lambda x: {f"{row['field']}": row['value'] for _, row in x.iterrows()},
-    #         include_groups = False
-    #     ).reset_index(name=name)
-    #     return grouped[name]
-    # def aggregate_leaves(self,df,name):
-    #     ids = ['ISA_ID','GS_ID','ST_ID','CLP_ID','SVC_ID','level']
-    #     test = df[ids+['LEAF_ID','field','name','value']].groupby(ids,dropna=False).apply(
-    #         lambda x: list(self.aggregate_leaf(x, name)), 
-    #         include_groups=False
-    #     ).reset_index(name=name)
-    #     return test
-    # def combine_CAS(self):
-    #     return self.aggregate_leaves(self.TABLES['CAS'],'CAS')
-    # def combine_REF(self):
-    #     return self.aggregate_leaves(self.TABLES['REF'],'REF')
-    # def combine_LQ(self):
-    #     return self.aggregate_leaves(self.TABLES['LQ'],'LQ')
-    # def combine_DTM(self):
-    #     return self.aggregate_leaves(self.TABLES['DTM'],'DTM')
-    # def combine_AMT(self):
-    #     return self.aggregate_leaves(self.TABLES['AMT'],'AMT')
-    # def combine_PLB(self):
-    #     return self.aggregate_leaves(self.TABLES['PLB'],'PLB')
-    
     # def flatten(self,prefix = None,table_names = True, descriptions=False):
     #     flattend_dfs = {}
     #     for key, table in self.TABLES.items():
