@@ -52,7 +52,7 @@ class Parser:
         seg_data = segment.seg_data 
         seg_node = segment.x12_map_node
 
-        amend_list = ['NM1','N101','N1','N2','N3','N4','DTM','PER']
+        amend_list = ['NM1','N101','N1','N2','DTM','PER']
 
         result = {
             'segment': segment.id + seg_data.get_value(segment.id+'01') if segment.id in amend_list else segment.id

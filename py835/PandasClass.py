@@ -7,7 +7,7 @@ class CustomDataFrame(pd.DataFrame):
     def _constructor(self):
         return CustomDataFrame
 
-    def flatten(self, prefix=None, descriptions=False):
+    def flatten(self, prefix=None, descriptions=False, segment = True):
         # Dictionary to store the results
         row_dict = {}
 
@@ -23,12 +23,12 @@ class CustomDataFrame(pd.DataFrame):
             segment = row['segment']
             field = row['field']
             name = row['name']
-            
+            col_name = f"{field}"
+            if segment:
+                col_name = f"{segment} {col_name}"
             # Construct the column name
             if prefix:
-                col_name = f"{prefix}{segment} {field}"
-            else:
-                col_name = f"{segment} {field}"
+                col_name = f"{prefix}{col_name}"
             
             if descriptions and name:
                 col_name = f"{col_name} {name}"
